@@ -1,10 +1,7 @@
 package org.cosmiccoders.api.controllers;
 
 import lombok.AllArgsConstructor;
-import org.cosmiccoders.api.dto.LoginDto;
-import org.cosmiccoders.api.dto.MessageDto;
-import org.cosmiccoders.api.dto.RegistrationDto;
-import org.cosmiccoders.api.dto.ResendVerificationDto;
+import org.cosmiccoders.api.dto.*;
 import org.cosmiccoders.api.model.RefreshToken;
 import org.cosmiccoders.api.model.UserEntity;
 import org.cosmiccoders.api.security.JwtTokenUtil;
@@ -43,7 +40,7 @@ public class AuthController {
         }
         UserEntity user = userService.saveUser(registrationDto);
 
-        return ResponseEntity.ok("User registered successfully");
+        return ResponseEntity.ok(new MessageDto("User registered successfully"));
     }
 
     @PostMapping("/login")
@@ -80,18 +77,11 @@ public class AuthController {
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
                 .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
-                .body(new MessageDto(user.getUsername()));
+                .body(new AuthenticationResponseDto(user.getUsername(), user.getEmail()));
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(@CookieValue(name = "refreshToken", required = false) String refreshtoken) {
-        if(refreshtoken != null) {
-            System.out.println(refreshtoken);
-            if (jwtTokenUtil.getTokenIdFromRefreshToken(refreshtoken) == null)
-                return ResponseEntity.badRequest().body("Refresh token is invalid");
-            userService.deleteRefreshToken(jwtTokenUtil.getTokenIdFromRefreshToken(refreshtoken));
-        }
-
+    public ResponseEntity<?> logout() {
         ResponseCookie accessToken = ResponseCookie.from("accessToken", "")
                 .domain(SecurityConstants.COOKIE_DOMAIN)
                 .httpOnly(true)
