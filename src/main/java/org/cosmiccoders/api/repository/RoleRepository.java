@@ -1,5 +1,6 @@
-package org.cosmiccoders.api.model;
+package org.cosmiccoders.api.repository;
 
+import org.cosmiccoders.api.model.Role;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

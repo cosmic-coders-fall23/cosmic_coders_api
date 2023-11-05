@@ -1,9 +1,12 @@
 package org.cosmiccoders.api.services.implementation;
 
 import lombok.AllArgsConstructor;
+import org.cosmiccoders.api.dto.HighScoreDto;
+import org.cosmiccoders.api.dto.HighScoreRepository;
 import org.cosmiccoders.api.dto.RegistrationDto;
 import org.cosmiccoders.api.model.*;
 import org.cosmiccoders.api.repository.RefreshTokenRepository;
+import org.cosmiccoders.api.repository.RoleRepository;
 import org.cosmiccoders.api.repository.UserEntityRepository;
 import org.cosmiccoders.api.security.SecurityConstants;
 import org.cosmiccoders.api.services.UserService;
@@ -27,6 +30,7 @@ public class UserServiceImpl implements UserService {
     private final VerificationService verificationService;
     private final RefreshTokenRepository refreshTokenRepository;
     private final RoleRepository roleRepository;
+    private final HighScoreRepository highScoreRepository;
     private final EmailAPI emailAPI;
 
     public UserEntity findByEmail(String email) {
@@ -49,8 +53,12 @@ public class UserServiceImpl implements UserService {
         userEntity.setPassword(passwordEncoder.encode(registrationDto.getPassword()));
         Role role = roleRepository.findByName("ROLE_USER");
         userEntity.setRoles(Collections.singletonList(role));
-
         userRepository.save(userEntity);
+
+        HighScore highScore = new HighScore();
+        highScore.setUser(userEntity);
+        highScore.setScore(0);
+        highScoreRepository.save(highScore);
 
         String token = UUID.randomUUID().toString();
         VerificationToken verificationToken = new VerificationToken();
@@ -58,11 +66,9 @@ public class UserServiceImpl implements UserService {
         verificationToken.setUser(userEntity);
         verificationToken.setCreatedAt(LocalDateTime.now());
         verificationToken.setExpiresAt(LocalDateTime.now().plusMinutes(15));
-
         verificationService.save(verificationToken);
 
         String link = SecurityConstants.BACKEND_URL + "/auth/verify?token=" + token;
-//        emailSender.send(userEntity.getEmail(), buildEmail(userEntity.getUsername(), link));
         emailAPI.send(registrationDto.getEmail(), registrationDto.getUsername(), link);
 
         return userEntity;
@@ -124,7 +130,6 @@ public class UserServiceImpl implements UserService {
         verificationService.save(verificationToken);
 
         String link = SecurityConstants.BACKEND_URL + "/auth/verify?token=" + token;
-//        emailSender.send(userEntity.getEmail(), buildEmail(userEntity.getUsername(), link));
         emailAPI.send(email, userEntity.getUsername(), link);
 
         return "Verification email sent";

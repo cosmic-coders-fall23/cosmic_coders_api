@@ -2,10 +2,12 @@ package org.cosmiccoders.api.controllers;
 
 import lombok.AllArgsConstructor;
 import org.cosmiccoders.api.dto.*;
+import org.cosmiccoders.api.model.HighScore;
 import org.cosmiccoders.api.model.RefreshToken;
 import org.cosmiccoders.api.model.UserEntity;
 import org.cosmiccoders.api.security.JwtTokenUtil;
 import org.cosmiccoders.api.security.SecurityConstants;
+import org.cosmiccoders.api.services.GameService;
 import org.cosmiccoders.api.services.UserService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -25,6 +27,7 @@ import java.net.URI;
 public class AuthController {
     private final AuthenticationManager authenticationManager;
     private final UserService userService;
+    private final GameService gameService;
     private final JwtTokenUtil jwtTokenUtil;
 
     @PostMapping("/register")
@@ -51,6 +54,7 @@ public class AuthController {
         if(!user.isVerified()) {
             return ResponseEntity.status(HttpStatus.LOCKED).body(new MessageDto("User not verified"));
         }
+        HighScore highScore = gameService.getHighScore(user);
 
         String accessToken = jwtTokenUtil.generateAccessToken(user);
         RefreshToken refreshToken = userService.generateAndSaveRefreshToken(loginDto.getEmail());
@@ -77,7 +81,7 @@ public class AuthController {
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
                 .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
-                .body(new AuthenticationResponseDto(user.getUsername(), user.getEmail()));
+                .body(new AuthenticationResponseDto(user.getUsername(), user.getEmail(), highScore.getScore()));
     }
 
     @PostMapping("/logout")

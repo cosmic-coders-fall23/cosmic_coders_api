@@ -1,5 +1,6 @@
 package org.cosmiccoders.api.services;
 
+import org.cosmiccoders.api.dto.HighScoreDto;
 import org.cosmiccoders.api.dto.RegistrationDto;
 import org.cosmiccoders.api.model.RefreshToken;
 import org.cosmiccoders.api.model.UserEntity;
